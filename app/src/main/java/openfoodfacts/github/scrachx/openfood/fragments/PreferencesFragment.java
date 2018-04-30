@@ -1,5 +1,6 @@
 package openfoodfacts.github.scrachx.openfood.fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -11,6 +12,7 @@ import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import openfoodfacts.github.scrachx.openfood.BuildConfig;
 import openfoodfacts.github.scrachx.openfood.R;
 import openfoodfacts.github.scrachx.openfood.models.Additive;
 import openfoodfacts.github.scrachx.openfood.models.AdditiveDao;
@@ -52,6 +55,9 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements INa
     private SharedPreferences settings;
     private NavigationDrawerListener navigationDrawerListener;
 
+   Context context;
+
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         MenuItem item = menu.findItem(R.id.action_search);
@@ -62,6 +68,8 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements INa
     public void onCreatePreferences(Bundle bundle, String rootKey) {
         setPreferencesFromResource(R.xml.preferences, rootKey);
         setHasOptionsMenu(true);
+        context=getContext();
+
 
         ListPreference languagePreference = ((ListPreference) findPreference("Locale.Helper.Selected.Language"));
 
@@ -113,6 +121,23 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements INa
             return true;
         });
 
+        Preference rateus=findPreference("RateUs");
+        rateus.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                try {
+                    String installer = context.getPackageManager()
+                            .getInstallerPackageName(context.getPackageName());
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("market://details?id=" + installer)));
+                } catch (android.content.ActivityNotFoundException e) {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://play.google.com/store/apps/details?id=" + context.getPackageName())));
+                }
+                return true;
+            }
+        });
+
 
         Preference faqbutton = findPreference("FAQ");
         faqbutton.setOnPreferenceClickListener(preference -> {
@@ -151,6 +176,13 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements INa
             settings.edit().putString("imageUpload", (String) newValue).apply();
             return true;
         });
+
+
+        CheckBoxPreference photoPreference = (CheckBoxPreference) findPreference("photoMode");
+        if (BuildConfig.FLAVOR.equals("opf")) {
+            photoPreference.setVisible(false);
+        }
+
     }
 
     @Override
